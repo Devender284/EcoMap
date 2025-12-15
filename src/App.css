@@ -124,6 +124,18 @@ body {
   }
 }
 
+/* Animation for toast notifications */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .main-content {

@@ -40,7 +40,7 @@ export const useEWasteLocations = () => {
 
   const addLocation = useCallback((formData: ReportFormData) => {
     const newLocation: EWasteLocation = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       lat: formData.lat,
       lng: formData.lng,
       wasteType: formData.wasteType,

@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent, FormEvent } from 'react';
+import { useState, useRef, ChangeEvent, FormEvent, useEffect } from 'react';
 import { Camera, MapPin, Upload, Loader2 } from 'lucide-react';
 import { ReportFormData, WasteType, AIClassificationResult } from '../types';
 import { classifyEWasteImage } from '../services/aiClassification';
@@ -8,9 +8,10 @@ interface ReportFormProps {
   selectedLocation: { lat: number; lng: number } | null;
   onSubmit: (data: ReportFormData) => void;
   onLocationSelect: () => void;
+  onError?: (message: string) => void;
 }
 
-export default function ReportForm({ selectedLocation, onSubmit, onLocationSelect }: ReportFormProps) {
+export default function ReportForm({ selectedLocation, onSubmit, onLocationSelect, onError }: ReportFormProps) {
   const [wasteType, setWasteType] = useState<WasteType>('mobile');
   const [description, setDescription] = useState('');
   const [reportedBy, setReportedBy] = useState('');
@@ -22,11 +23,26 @@ export default function ReportForm({ selectedLocation, onSubmit, onLocationSelec
 
   const wasteTypes: WasteType[] = ['mobile', 'computer', 'tv', 'battery', 'appliance', 'other'];
 
+  // Cleanup blob URL on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Revoke previous URL to prevent memory leak
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      
       setImage(file);
-      setImagePreview(URL.createObjectURL(file));
+      const newPreview = URL.createObjectURL(file);
+      setImagePreview(newPreview);
       
       // Trigger AI classification
       setIsClassifying(true);
@@ -51,12 +67,12 @@ export default function ReportForm({ selectedLocation, onSubmit, onLocationSelec
     e.preventDefault();
     
     if (!selectedLocation) {
-      alert('Please select a location on the map first!');
+      onError?.('Please select a location on the map first!');
       return;
     }
     
     if (!reportedBy.trim()) {
-      alert('Please enter your name!');
+      onError?.('Please enter your name!');
       return;
     }
 
@@ -76,6 +92,9 @@ export default function ReportForm({ selectedLocation, onSubmit, onLocationSelec
     setDescription('');
     setReportedBy('');
     setImage(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setImagePreview(null);
     setAiResult(null);
     if (fileInputRef.current) {

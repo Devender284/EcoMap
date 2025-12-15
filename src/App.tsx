@@ -2,6 +2,8 @@ import { useState } from 'react';
 import MapComponent from './components/MapComponent';
 import ReportForm from './components/ReportForm';
 import Legend from './components/Legend';
+import { ToastContainer } from './components/Toast';
+import { useToast } from './hooks/useToast';
 import { useEWasteLocations } from './hooks/useEWasteLocations';
 import { ReportFormData } from './types';
 import { Recycle } from 'lucide-react';
@@ -10,6 +12,7 @@ import './App.css';
 function App() {
   const { locations, addLocation } = useEWasteLocations();
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const { toasts, showToast, removeToast } = useToast();
 
   const handleMapClick = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng });
@@ -18,15 +21,18 @@ function App() {
   const handleFormSubmit = (data: ReportFormData) => {
     addLocation(data);
     setSelectedLocation(null);
-    alert('E-waste location reported successfully!');
+    showToast('E-waste location reported successfully!', 'success');
   };
 
   const handleLocationSelect = () => {
-    alert('Click anywhere on the map to select a location');
+    showToast('Click anywhere on the map to select a location', 'info');
   };
 
   return (
     <div className="app">
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      
       {/* Header */}
       <header className="header">
         <div className="header-content">
@@ -47,6 +53,7 @@ function App() {
               selectedLocation={selectedLocation}
               onSubmit={handleFormSubmit}
               onLocationSelect={handleLocationSelect}
+              onError={(msg) => showToast(msg, 'error')}
             />
             <Legend />
           </div>
